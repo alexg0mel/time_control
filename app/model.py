@@ -16,6 +16,12 @@ class TagTaskGroup(SQLModel, table=True):
     task_id: int = Field(foreign_key="task.id", primary_key=True)
 
 
+# -- TimestampModel -- #
+
+class TimestampModel(SQLModel):
+    created_at: datetime = Field(default=datetime.utcnow())
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
 # -- Project -- #
 
 class ProjectPost(SQLModel):
@@ -43,11 +49,9 @@ class Tag(SQLModel, table=True):
 
 # -- Task -- #
 
-class Task(SQLModel, table=True):
+class Task(TimestampModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
-    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     project_id: int = Field(foreign_key='project.id')
     project: Optional[Project] = Relationship(back_populates='tasks')
     tags: list["Tag"] = Relationship(back_populates="tasks", link_model=TagTaskLink)
@@ -58,27 +62,31 @@ class Task(SQLModel, table=True):
 
 # -- Timeline-- #
 
-class Timeline(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+class TimelinePost(SQLModel):
     name: str
     start_time: date | None = None
     end_time: date | None = None
     status: str = ""
+
+
+class Timeline(TimestampModel, TimelinePost, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    groups: list['Group'] = Relationship(back_populates='timeline')
+
+
+class TimelineOut(TimestampModel, TimelinePost):
+    id: int
     groups: list['Group'] = Relationship(back_populates='timeline')
 
 
 # -- Group -- #
 
-class Group(SQLModel, table=True):
+class Group(TimestampModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     tasks: list["Task"] = Relationship(back_populates="groups", link_model=TagTaskGroup)
     timeline_id: int = Field(foreign_key='timeline.id')
     timeline: Optional[Timeline] = Relationship(back_populates='groups')
-    created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
     times: list["Time"] = Relationship(back_populates="group")
 
 
