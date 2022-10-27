@@ -4,6 +4,8 @@ from datetime import date, datetime
 from sqlmodel import Field, SQLModel, Relationship
 
 
+# -- many-to-many links -- #
+
 class TagTaskLink(SQLModel, table=True):
     tag_id: int = Field(foreign_key="tag.id", primary_key=True)
     task_id: int = Field(foreign_key="task.id", primary_key=True)
@@ -14,19 +16,32 @@ class TagTaskGroup(SQLModel, table=True):
     task_id: int = Field(foreign_key="task.id", primary_key=True)
 
 
-class Project(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+# -- Project -- #
+
+class ProjectPost(SQLModel):
     name: str
     active: bool = True
 
+
+class Project(ProjectPost, table=True):
+    id: int | None = Field(default=None, primary_key=True)
     tasks: list['Task'] = Relationship(back_populates='project')
 
+
+class ProjectOut(ProjectPost):
+    id: int
+    tasks: list['Task'] = Relationship(back_populates='project')
+
+
+# -- Tag -- #
 
 class Tag(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
     tasks: list["Task"] = Relationship(back_populates="tags", link_model=TagTaskLink)
 
+
+# -- Task -- #
 
 class Task(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -38,8 +53,10 @@ class Task(SQLModel, table=True):
     tags: list["Tag"] = Relationship(back_populates="tasks", link_model=TagTaskLink)
     plan_time: int = 0
     groups: list["Group"] = Relationship(back_populates="tasks", link_model=TagTaskGroup)
-    times: list["Time"] = Relationship(back_populates="tasks")
+    times: list["Time"] = Relationship(back_populates="task")
 
+
+# -- Timeline-- #
 
 class Timeline(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -52,6 +69,8 @@ class Timeline(SQLModel, table=True):
     groups: list['Group'] = Relationship(back_populates='timeline')
 
 
+# -- Group -- #
+
 class Group(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str
@@ -60,8 +79,10 @@ class Group(SQLModel, table=True):
     timeline: Optional[Timeline] = Relationship(back_populates='groups')
     created_at: datetime = Field(default=datetime.utcnow(), nullable=False)
     updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    times: list["Time"] = Relationship(back_populates="groups")
+    times: list["Time"] = Relationship(back_populates="group")
 
+
+# -- Time -- #
 
 class Time(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -79,3 +100,5 @@ class Time(SQLModel, table=True):
 
 def create_all():
     pass
+
+

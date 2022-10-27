@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from sqlmodel import create_engine, SQLModel
+from sqlmodel import create_engine, SQLModel, Session
 
 from app.model import create_all
 
@@ -17,3 +17,11 @@ engine = create_engine(sqlite_url, echo=True)
 def create_db_and_tables():
     create_all()
     SQLModel.metadata.create_all(engine)
+
+
+def get_session() -> Session:
+    session = Session(engine)
+    try:
+        yield session
+    finally:
+        session.close()
